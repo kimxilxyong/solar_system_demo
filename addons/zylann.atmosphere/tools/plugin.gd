@@ -10,7 +10,7 @@ var _save_image_dialog : EditorFileDialog
 var _noise_cubemap_to_save : NoiseCubemap
 
 
-func _enter_tree():
+func _enter_tree() -> void:
 	# Using `add_custom_type` alone, it appears in New Resource dialog, 
 	# but doesn't appear in the resource dropdowns.
 	# Using `class_name` alone, it appears in the resource dropdowns,
@@ -25,7 +25,7 @@ func _enter_tree():
 	add_inspector_plugin(_noise_cubemap_inspector_plugin)
 
 
-func _exit_tree():
+func _exit_tree() -> void:
 	remove_custom_type("NoiseCubemap")
 
 	remove_inspector_plugin(_noise_cubemap_inspector_plugin)
@@ -36,7 +36,7 @@ func _exit_tree():
 		_save_image_dialog = null
 
 
-func _on_save_noise_cubemap_as_image_requested(noise_cubemap: NoiseCubemap):
+func _on_save_noise_cubemap_as_image_requested(noise_cubemap: NoiseCubemap) -> void:
 	if _save_image_dialog == null:
 		_save_image_dialog = EditorFileDialog.new()
 		_save_image_dialog.access = EditorFileDialog.ACCESS_RESOURCES
@@ -51,7 +51,7 @@ func _on_save_noise_cubemap_as_image_requested(noise_cubemap: NoiseCubemap):
 	_noise_cubemap_to_save = noise_cubemap
 
 
-func _on_image_dialog_file_selected(fpath: String):
+func _on_image_dialog_file_selected(fpath: String) -> void:
 	assert(_noise_cubemap_to_save != null)
 	var image := _noise_cubemap_to_save.generate_importable_image()
 	image.save_png(fpath)
@@ -101,5 +101,3 @@ static func write_import_file(settings: Dictionary, imp_fpath: String) -> bool:
 			.format([imp_fpath, err]))
 		return false
 	return true
-
-

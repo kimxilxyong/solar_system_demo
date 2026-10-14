@@ -17,7 +17,6 @@
 //#define CLOUDS_ENABLED
 //#endif
 //#define ATMOSPHERE_LITE
-//#define REVERSE_Z
 
 // If you use Godot 4.2 or older, you may comment this out
 #define REVERSE_Z

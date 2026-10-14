@@ -13,6 +13,7 @@ const SWITCH_MARGIN_RATIO = 1.1
 const AtmosphereShader = preload("./shaders/planet_atmosphere_no_clouds.gdshader")
 const DefaultShader = AtmosphereShader
 const BlueNoiseTexture = preload("./blue_noise.png")
+const CloudShadowShader = preload("./shaders/clouds_shadow.gdshader")
 
 const OpticalDepthBaker = preload("./optical_depth_baker.gd")
 
@@ -53,6 +54,9 @@ var _custom_shader : Shader
 
 @export var force_fullscreen := false
 
+@export var clouds_shadow_enabled : bool = false
+@export var clouds_shadow_cutoff_bias : float = 0.0
+
 var _far_mesh : BoxMesh
 var _near_mesh : QuadMesh
 var _mode := MODE_FAR
@@ -62,6 +66,8 @@ var _uses_baked_optical_depth := false
 
 var _optical_depth_baker : OpticalDepthBaker
 var _optical_depth_texture : Texture2D
+
+var _cloud_shadow_mesh_instance : MeshInstance3D
 
 # These parameters are assigned internally,
 # they don't need to be shown in the list of shader params
@@ -81,7 +87,7 @@ const _shader_params_affecting_optical_depth = {
 }
 
 
-func _init():
+func _init() -> void:
 	var material := ShaderMaterial.new()
 	material.shader = AtmosphereShader
 	_mesh_instance = MeshInstance3D.new()
@@ -108,14 +114,14 @@ func _init():
 	material.set_shader_parameter(&"u_clip_mode", 0.0)
 
 
-func _ready():
+func _ready() -> void:
 	var mat := _get_material()
 	# Must assign those in _ready because they are set by the scene loader, after _init
 	mat.set_shader_parameter(&"u_planet_radius", _planet_radius)
 	mat.set_shader_parameter(&"u_atmosphere_height", _atmosphere_height)
 
 
-func set_custom_shader(shader: Shader):
+func set_custom_shader(shader: Shader) -> void:
 	_custom_shader = shader
 	
 	var mat := _get_material()
@@ -141,7 +147,7 @@ func set_custom_shader(shader: Shader):
 	notify_property_list_changed()
 
 
-func _request_bake_optical_depth():
+func _request_bake_optical_depth() -> void:
 	var mat := _get_material()
 	if _optical_depth_baker == null:
 		_optical_depth_baker = OpticalDepthBaker.new()
@@ -150,7 +156,7 @@ func _request_bake_optical_depth():
 	_optical_depth_baker.request_bake(mat)
 
 
-func _on_optical_depth_baked(tex: Texture2D):
+func _on_optical_depth_baked(tex: Texture2D) -> void:
 	_optical_depth_texture = tex
 	var mat := _get_material()
 	mat.set_shader_parameter(&"u_optical_depth_texture", tex)
@@ -161,7 +167,7 @@ func _get_material() -> ShaderMaterial:
 
 
 # TODO Obsolete
-func set_shader_param(param_name: String, value):
+func set_shader_param(param_name: String, value: Variant) -> void:
 	push_warning("set_shader_param is deprecated, use set_shader_parameter")
 	set_shader_parameter(param_name, value)
 
@@ -172,7 +178,7 @@ func get_shader_param(param_name: String):
 	return get_shader_parameter(param_name)
 
 
-func set_shader_parameter(param_name: StringName, value):
+func set_shader_parameter(param_name: StringName, value: Variant) -> void:
 	_get_material().set_shader_parameter(param_name, value)
 
 
@@ -182,7 +188,7 @@ func get_shader_parameter(param_name: StringName):
 
 # Shader parameters are exposed like this so we can have more custom shaders in the future,
 # without forcing to change the node/script entirely
-func _get_property_list():
+func _get_property_list() -> Array:
 	var props := []
 	var mat := _get_material()
 	var shader_params := RenderingServer.get_shader_parameter_list(mat.shader.get_rid())
@@ -197,18 +203,19 @@ func _get_property_list():
 	return props
 
 
-func _get(p_key: StringName):
+func _get(p_key: StringName) -> Variant:
 	var key = String(p_key)
 	if key.begins_with("shader_params/"):
-		var param_name = key.substr(len("shader_params/"))
+		var param_name := key.substr(len("shader_params/"))
 		var mat := _get_material()
 		var value = mat.get_shader_parameter(param_name)
 		if value == null:
 			value = RenderingServer.shader_get_parameter_default(mat.shader, param_name)
 		return value
+	return null
 
 
-func _set(p_key: StringName, value):
+func _set(p_key: StringName, value: Variant) -> bool:
 	var key = String(p_key)
 	if key.begins_with("shader_params/"):
 		var param_name := key.substr(len("shader_params/"))
@@ -216,6 +223,8 @@ func _set(p_key: StringName, value):
 		mat.set_shader_parameter(param_name, value)
 		if _uses_baked_optical_depth and _shader_params_affecting_optical_depth.has(param_name):
 			_request_bake_optical_depth()
+		return true
+	return false
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -227,7 +236,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return PackedStringArray()
 
 
-func set_planet_radius(new_radius: float):
+func set_planet_radius(new_radius: float) -> void:
 	if _planet_radius == new_radius:
 		return
 	_planet_radius = maxf(new_radius, 0.0)
@@ -238,11 +247,11 @@ func set_planet_radius(new_radius: float):
 		_request_bake_optical_depth()
 
 
-func _update_cull_margin():
+func _update_cull_margin() -> void:
 	_mesh_instance.extra_cull_margin = _planet_radius + _atmosphere_height
 
 
-func set_atmosphere_height(new_height: float):
+func set_atmosphere_height(new_height: float) -> void:
 	if _atmosphere_height == new_height:
 		return
 	_atmosphere_height = maxf(new_height, 0.0)
@@ -253,12 +262,12 @@ func set_atmosphere_height(new_height: float):
 		_request_bake_optical_depth()
 
 
-func set_sun_path(new_sun_path: NodePath):
+func set_sun_path(new_sun_path: NodePath) -> void:
 	_sun_path = new_sun_path
 	update_configuration_warnings()
 
 
-func _set_mode(mode: int):
+func _set_mode(mode: int) -> void:
 	if mode == _mode:
 		return
 	_mode = mode
@@ -282,7 +291,7 @@ func _set_mode(mode: int):
 		_mesh_instance.mesh = _far_mesh
 
 
-func _process(_delta):
+func _process(_delta) -> void:
 	var cam_pos := Vector3()
 	var cam_near := 0.1
 	
@@ -335,10 +344,71 @@ func _process(_delta):
 	var world_to_model_matrix := global_transform.inverse()
 	mat.set_shader_parameter(&"u_world_to_model_matrix", world_to_model_matrix)
 	
-	# TODO Expose cloud coverage rotation speed
+	var cov_rot := _get_cloud_coverage_rotation_2d()
+	mat.set_shader_parameter(&"u_cloud_coverage_rotation", cov_rot)
+	
+	_process_cloud_shadow()
+
+
+func _get_cloud_coverage_rotation_angle() -> float:
 	var time := float(Time.get_ticks_msec()) / 1000.0
-	mat.set_shader_parameter(&"u_cloud_coverage_rotation", Transform2D().rotated(
-		time * deg_to_rad(clouds_rotation_speed)))
+	return time * deg_to_rad(clouds_rotation_speed)
+
+
+func _get_cloud_coverage_rotation_2d() -> Transform2D:
+	var a := _get_cloud_coverage_rotation_angle()
+	return Transform2D().rotated(a)
+
+
+func _process_cloud_shadow() -> void:
+	var use_cloud_shadow := false
+	
+	if clouds_shadow_enabled:
+		var mat := _get_material()
+		var coverage_cubemap : Cubemap = mat.get_shader_parameter(&"u_cloud_coverage_cubemap")
+		
+		if coverage_cubemap != null:
+			use_cloud_shadow = true
+			var mi : MeshInstance3D = _cloud_shadow_mesh_instance
+			var sphere : SphereMesh
+			
+			if mi != null:
+				sphere = mi.mesh
+			else:
+				sphere = SphereMesh.new()
+				
+				var new_shadow_mat := ShaderMaterial.new()
+				new_shadow_mat.shader = CloudShadowShader
+				
+				mi = MeshInstance3D.new()
+				mi.mesh = sphere
+				mi.material_override = new_shadow_mat
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+				add_child(mi)
+				_cloud_shadow_mesh_instance = mi
+			
+			var cloud_top : float = mat.get_shader_parameter(&"u_cloud_top");
+			var cloud_bottom : float = mat.get_shader_parameter(&"u_cloud_bottom");
+			var cast_radius := (cloud_top + cloud_bottom) * 0.5 * atmosphere_height + _planet_radius
+			
+			if not is_equal_approx(sphere.radius, cast_radius):
+				sphere.radius = cast_radius
+				sphere.height = sphere.radius * 2.0
+			
+			var shadow_mat : ShaderMaterial = mi.material_override
+			
+			shadow_mat.set_shader_parameter(&"u_cloud_coverage_cubemap", coverage_cubemap)
+			
+			var cov_rot := _get_cloud_coverage_rotation_2d()
+			shadow_mat.set_shader_parameter(&"u_cloud_coverage_rotation", cov_rot)
+			
+			var sc_bias : float = mat.get_shader_parameter(&"u_cloud_coverage_bias")
+			shadow_mat.set_shader_parameter(&"u_bias", clouds_shadow_cutoff_bias - sc_bias)
+	
+	if not use_cloud_shadow:
+		if _cloud_shadow_mesh_instance != null:
+			_cloud_shadow_mesh_instance.queue_free()
+			_cloud_shadow_mesh_instance = null
 
 
 #static func _make_quad_mesh() -> Mesh:

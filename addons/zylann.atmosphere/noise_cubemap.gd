@@ -5,12 +5,6 @@ extends Cubemap
 # Procedural cubemap projecting 3D noise. It is mostly meant as a tool to prototype, and once a
 # good result is found, it can be saved as an image which won't need computations when loaded.
 
-# Unfortunately, Cubemap extends ImageTextureLayered, which means if you save it in a TSCN file,
-# it will also save all 6 images as text even though they are procedurally generated and not
-# intented at being used directly. This will bloat your scene and make it slow to load.
-# It's better to save the output as a PNG that can be imported as a proper cubemap with VRAM compression etc.
-# To workaround some of this, you may save this resource as a binary .res file.
-
 
 var _noise : Noise
 @export var noise : Noise:
@@ -54,23 +48,23 @@ var _scale := Vector3(100, 100, 100)
 var _update_scheduled := false
 
 
-func _init():
+func _init() -> void:
 	# Hack to have it working by default when created in the inspector...
 	noise = FastNoiseLite.new()
 	_request_update()
 
 
-func _on_noise_changed():
+func _on_noise_changed() -> void:
 	_request_update()
 
 
-func _request_update():
+func _request_update() -> void:
 	if not _update_scheduled:
 		_update.call_deferred()
 		_update_scheduled = true
 
 
-func _update():
+func _update() -> void:
 	if _noise == null:
 		_update_scheduled = false
 		return
