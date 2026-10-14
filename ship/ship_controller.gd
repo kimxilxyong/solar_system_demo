@@ -20,7 +20,7 @@ func set_enabled(enabled: bool):
 	set_process_input(enabled)
 
 
-func _process(delta: float):
+func _process(_unused_delta: float):
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		# The UI probably has focus
 		return
