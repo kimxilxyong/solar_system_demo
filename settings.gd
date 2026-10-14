@@ -23,4 +23,3 @@ var show_edited_data_blocks := false
 var wireframe := false
 var clouds_quality := CLOUDS_LOW
 var antialias := ANTIALIAS_DISABLED
-

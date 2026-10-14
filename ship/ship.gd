@@ -18,10 +18,10 @@ const STATE_FLYING = 1
 @export var speed_cap_on_planet := 40.0
 @export var speed_cap_in_space := 400.0
 
-@onready var _visual_root : Node3D = $Visual/VisualRoot
-@onready var _controller : ShipController = $Controller
+@onready var _visual_root: Node3D = $Visual/VisualRoot
+@onready var _controller: ShipController = $Controller
 # Nodes that should be enabled only when landed
-@onready var _landed_nodes : Array[Node] = [
+@onready var _landed_nodes: Array[Node] = [
 	# TODO Godot4 now imports some nodes with unpredictable names if they collide instead of
 	# incrementing.
 	# The model has Interior and Interior-colonly but then the second was supposed to be named
@@ -30,26 +30,26 @@ const STATE_FLYING = 1
 	$Visual/VisualRoot/ship/HatchDown/KinematicBody,
 	$CommandPanel
 ]
-var _landed_node_parents : Array[Node] = []
-@onready var _flight_collision_shapes : Array[CollisionShape3D] = [
+var _landed_node_parents: Array[Node] = []
+@onready var _flight_collision_shapes: Array[CollisionShape3D] = [
 	$FlightCollisionShape,
 	#$FlightCollisionShape2,
 	#$FlightCollisionShape3
 ]
-@onready var _animation_player : AnimationPlayer = $AnimationPlayer
-@onready var _main_jets : Array[JetVFX] = [
+@onready var _animation_player: AnimationPlayer = $AnimationPlayer
+@onready var _main_jets: Array[JetVFX] = [
 	$Visual/VisualRoot/JetVFXMainLeft,
 	$Visual/VisualRoot/JetVFXMainRight,
 ]
-@onready var _left_roll_jets : Array[JetVFX] = [
+@onready var _left_roll_jets: Array[JetVFX] = [
 	$Visual/VisualRoot/JetVFXLeftWing1,
 	$Visual/VisualRoot/JetVFXLeftWing2
 ]
-@onready var _right_roll_jets : Array[JetVFX] = [
+@onready var _right_roll_jets: Array[JetVFX] = [
 	$Visual/VisualRoot/JetVFXRightWing1,
 	$Visual/VisualRoot/JetVFXRightWing2
 ]
-@onready var _audio : ShipAudio = $ShipAudio
+@onready var _audio: ShipAudio = $ShipAudio
 
 var _move_cmd := Vector3()
 var _turn_cmd := Vector3()
@@ -57,7 +57,7 @@ var _superspeed_cmd := false
 var _exit_ship_cmd := false
 var _state := STATE_FLYING
 var _planet_damping_amount := 0.0 # TODO Doesnt need to be a member var
-var _ref_change_info : ReferenceChangeInfo
+var _ref_change_info: ReferenceChangeInfo
 var _was_superspeed := false
 var _last_contacts_count := 0
 
@@ -166,7 +166,7 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 	var right := gtrans.basis.x
 	var up := gtrans.basis.y
 
-	var stellar_body : StellarBody = get_solar_system().get_reference_stellar_body()
+	var stellar_body: StellarBody = get_solar_system().get_reference_stellar_body()
 	var linear_acceleration_mod := linear_acceleration
 	var speed_cap_in_space_mod := speed_cap_in_space
 	
@@ -209,7 +209,7 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 		# In case you dive into a stellar body, gravity actually reduces as you get closer to
 		# the core, because some mass is now behind you
 		# TODO Explicit typing should not be needed, there is a bug in GDScript2
-		var gd : float = absf(distance_to_core - stellar_body.radius) + stellar_body.radius
+		var gd: float = absf(distance_to_core - stellar_body.radius) + stellar_body.radius
 		var gravity_dir := (pull_center - gtrans.origin).normalized()
 		var stellar_mass := Util.get_sphere_volume(stellar_body.radius)
 		var f := 0.005 * stellar_mass / (gd * gd)
@@ -252,4 +252,3 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 
 func get_last_contacts_count() -> int:
 	return _last_contacts_count
-

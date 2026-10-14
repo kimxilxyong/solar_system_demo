@@ -4,9 +4,9 @@ const StellarBody = preload("../solar_system/stellar_body.gd")
 var CharacterScene = load("res://character/character.tscn")
 const SS_Camera = preload("res://camera/camera.gd")
 
-@onready var _ship : Ship = get_parent()
-@onready var _character_spawn_position_node : Node3D = get_node("../CharacterSpawnPosition")
-@onready var _ground_check_position_node : Node3D = get_node("../GroundCheckPosition")
+@onready var _ship: Ship = get_parent()
+@onready var _character_spawn_position_node: Node3D = get_node("../CharacterSpawnPosition")
+@onready var _ground_check_position_node: Node3D = get_node("../GroundCheckPosition")
 
 @export var keyboard_turn_sensitivity := 0.1
 @export var mouse_turn_sensitivity := 0.1
@@ -76,15 +76,15 @@ func _try_exit_ship():
 		# Still moving
 		print("Still moving")
 		return
-	var stellar_body : StellarBody = ship.get_solar_system().get_reference_stellar_body()
+	var stellar_body: StellarBody = ship.get_solar_system().get_reference_stellar_body()
 	if stellar_body.type != StellarBody.TYPE_ROCKY:
 		# Can't walk on this
 		print("Can't walk on this")
 		return
 	var planet_center := stellar_body.node.global_transform.origin
-	var space_state : PhysicsDirectSpaceState3D = ship.get_world_3d().direct_space_state
-	var ship_trans : Transform3D = ship.global_transform
-	var ship_pos : Vector3 = ship_trans.origin
+	var space_state: PhysicsDirectSpaceState3D = ship.get_world_3d().direct_space_state
+	var ship_trans: Transform3D = ship.global_transform
+	var ship_pos: Vector3 = ship_trans.origin
 	var down := (planet_center - ship_pos).normalized()
 	# Is the ship not upside down?
 	if down.dot(-ship_trans.basis.y) < 0.8:
@@ -116,10 +116,10 @@ func _try_exit_ship():
 		print("No ground under spawn position")
 		return
 	# Let's do this
-	var character : Node3D = CharacterScene.instantiate()
+	var character: Node3D = CharacterScene.instantiate()
 	character.position = spawn_pos
 	ship.get_parent().add_child(character)
-	var camera : SS_Camera = get_viewport().get_camera_3d()
+	var camera: SS_Camera = get_viewport().get_camera_3d()
 	camera.set_target(character)
 	ship.disable_controller()
 
@@ -133,7 +133,7 @@ func _input(event: InputEvent):
 	
 	if event is InputEventMouseMotion:
 		# Get mouse delta
-		var motion : Vector2 = -event.relative
+		var motion: Vector2 = - event.relative
 		var cmd := mouse_turn_sensitivity * motion
 		_turn_cmd.x += cmd.x
 		_turn_cmd.y += cmd.y
@@ -162,14 +162,13 @@ func _process_dig_actions():
 	
 	if not hit.is_empty():
 		if hit.collider is VoxelLodTerrain:
-			var volume : VoxelLodTerrain = hit.collider
+			var volume: VoxelLodTerrain = hit.collider
 			if dig_cmd:
-				var vt : VoxelTool = volume.get_voxel_tool()
-				var hit_pos : Vector3 = hit.position
+				var vt: VoxelTool = volume.get_voxel_tool()
+				var hit_pos: Vector3 = hit.position
 				var pos := volume.get_global_transform().affine_inverse() * hit_pos
 				var sphere_size := 15.0
 				pos -= front * (sphere_size * 0.7)
 				vt.channel = VoxelBuffer.CHANNEL_SDF
 				vt.mode = VoxelTool.MODE_REMOVE
 				vt.do_sphere(pos, sphere_size)
-

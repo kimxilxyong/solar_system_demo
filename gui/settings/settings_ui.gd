@@ -71,4 +71,3 @@ func _update_ui():
 
 func _on_Close_pressed():
 	hide()
-
