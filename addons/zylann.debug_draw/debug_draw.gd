@@ -8,7 +8,7 @@
 
 extends CanvasLayer
 
-const DebugDrawFont = preload("res://addons/zylann.debug_draw/Hack-Regular.ttf")
+const DebugDrawFont = preload("res://addons/zylann.debug_draw/Hack-Regular.font.tres")
 
 ## @brief How many frames HUD text lines remain shown after being invoked.
 const TEXT_LINGER_FRAMES = 5
@@ -273,12 +273,12 @@ func _on_CanvasItem_draw():
 	var xpad := 2
 	var ypad := 1
 	var font_offset := ascent + Vector2(xpad, ypad)
-	var line_height := font.get_height() + 2 * ypad
+	var line_height : float = font.get_height() + 2 * ypad
 
 	for key in _texts.keys():
 		var t = _texts[key]
 		var text := str(key, ": ", t.text)
-		var ss := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TEXT_SIZE)
+		var ss : Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TEXT_SIZE)
 		ci.draw_rect(Rect2(pos, Vector2(ss.x + xpad * 2, line_height)), TEXT_BG_COLOR)
 		ci.draw_string(font, pos + font_offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, TEXT_SIZE,
 			TEXT_COLOR)

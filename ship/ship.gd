@@ -3,6 +3,7 @@ class_name Ship
 
 const StellarBody = preload("../solar_system/stellar_body.gd")
 const Util = preload("../util/util.gd")
+const SolarSystem = preload("../solar_system/solar_system.gd")
 const SolarSystemSetup = preload("../solar_system/solar_system_setup.gd")
 const Settings = preload("res://settings.gd")
 const ShipController = preload("./ship_controller.gd")

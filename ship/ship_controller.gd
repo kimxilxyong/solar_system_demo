@@ -1,6 +1,7 @@
 extends Node
 
 const StellarBody = preload("../solar_system/stellar_body.gd")
+const Ship = preload("./ship.gd")
 var CharacterScene = load("res://character/character.tscn")
 const SS_Camera = preload("res://camera/camera.gd")
 

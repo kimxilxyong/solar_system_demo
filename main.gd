@@ -1,6 +1,7 @@
 extends Node
 
 const Settings = preload("res://settings.gd")
+const SolarSystem = preload("res://solar_system/solar_system.gd")
 
 @onready var _main_menu : Control = $MainMenu
 @onready var _settings_ui : Control = $SettingsUI

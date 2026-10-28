@@ -1,2 +1,4 @@
 .godot/
 debug_data/*
+*.uid
+*.import
